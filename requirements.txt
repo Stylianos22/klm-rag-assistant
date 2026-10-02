@@ -1,0 +1,5 @@
+sentence-transformers>=3.0
+numpy>=1.26
+chromadb>=0.5
+# Generation step needs an LLM client — pick a free/local one, e.g.:
+# ollama (local, free)  OR  an API client your school licence allows.

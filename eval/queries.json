@@ -1,0 +1,15 @@
+{
+  "scoring": {"top_k": 3, "abstain_threshold": 0.35, "retrieval_target": 0.80, "approval_target": 0.70, "citation_target": 1.0},
+  "queries": [
+    {"id": "Q1", "query": "How long do I have to return something?", "gold": ["26"], "type": "answerable"},
+    {"id": "Q2", "query": "The boots I ordered turned up with a ripped seam - can I get my money back?", "gold": ["35"], "type": "answerable"},
+    {"id": "Q3", "query": "I'm sending back a sale item I bought about 3 weeks ago - do I get a refund or store credit, and who pays the return postage?", "gold": ["32","30","29"], "type": "answerable-multidoc"},
+    {"id": "Q4", "query": "Shipping to Germany - how long does it take, and do I get free delivery on a 45 euro order?", "gold": ["16","17"], "type": "answerable-multidoc"},
+    {"id": "Q5", "query": "Do you do pay-later, like Klarna?", "gold": ["07"], "type": "answerable"},
+    {"id": "Q6", "query": "Nothing's actually wrong with it, I just changed my mind - can I still send it back?", "gold": ["27"], "type": "answerable"},
+    {"id": "Q7", "query": "Can I return it?", "gold": null, "type": "ambiguous-should-clarify"},
+    {"id": "Q8", "query": "Where's my order #48213? It's been a week.", "gold": null, "type": "out-of-kb-live-data"},
+    {"id": "Q9", "query": "Do you price-match other shops if I find it cheaper?", "gold": null, "type": "out-of-kb-absent"},
+    {"id": "Q10", "query": "Which of your laptops is best for gaming?", "gold": null, "type": "out-of-kb-domain"}
+  ]
+}

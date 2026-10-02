@@ -1,0 +1,12 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+.obsidian/
+# vector index / caches
+.chroma/
+chroma_db/
+*.sqlite3
+.cache/
+.env
