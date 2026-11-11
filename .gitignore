@@ -10,3 +10,4 @@ chroma_db/
 *.sqlite3
 .cache/
 .env
+.env*

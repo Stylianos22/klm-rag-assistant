@@ -1,0 +1,87 @@
+{
+  "description": "Held-out faithfulness set (DL16 C1). 8 hand-written answers to NEW questions (none of the frozen Q1-Q10), citing KB docs the in-sample cases never used. Judge v2's prompt was frozen before this set was written and must not be tuned on its result. LABELS ARE STYLIANOS'S CALL: set each 'label' to \"faithful\" or \"unfaithful\" (and optionally a 'label_reason'), judging each answer against the cited KB doc text only. Faithful = every policy claim is stated in, or follows directly from, the cited doc for the customer's situation. Design notes (what each case was built to test) are in eval/faithfulness_holdout_design.md; read them AFTER labelling so they don't steer the labels.",
+  "created": "2026-11-10",
+  "judge_frozen": "faithfulness-judge v2 (src/faithfulness.py JUDGE_SYSTEM_V2, commit 7519554)",
+  "cases": [
+    {
+      "id": "H1",
+      "question": "Will my promo code work on a jacket that's already reduced?",
+      "answer": "It might not: some items, such as **already-discounted products**, may be excluded from promo codes [10]. Enter the code in the \"promo code\" box at checkout and you'll see whether the discount applies before you pay [10].",
+      "cited_ids": ["10"],
+      "retrieved_ids": ["10", "12", "32"],
+      "refused": false,
+      "label": "faithful",
+      "label_reason": ""
+    },
+    {
+      "id": "H2",
+      "question": "If I exchange my coat for a cheaper size, what happens to the difference?",
+      "answer": "Start the exchange in **Your account → Returns** [31]. Because the new item costs less, we'll refund the difference to you as **store credit**, which never expires [31][34].",
+      "cited_ids": ["31", "34"],
+      "retrieved_ids": ["31", "34", "30"],
+      "refused": false,
+      "label": "unfaithful",
+      "label_reason": ""
+    },
+    {
+      "id": "H3",
+      "question": "Can I spread a gift card over a few different orders?",
+      "answer": "Yes: the gift card balance can be used across several orders, and it stays valid for **24 months** [11]. It can't be exchanged for cash, though [11].",
+      "cited_ids": ["11"],
+      "retrieved_ids": ["11", "10", "34"],
+      "refused": false,
+      "label": "faithful",
+      "label_reason": ""
+    },
+    {
+      "id": "H4",
+      "question": "Tracking says my parcel was delivered but it's not here. What now?",
+      "answer": "First check with your neighbours and anyone in your household, and look at the carrier's proof of delivery [21]. If it's still missing, contact us **within 14 days** and we'll open an investigation with the carrier [21]. Most investigations are wrapped up within **5 business days**, after which we send a replacement or a refund [21].",
+      "cited_ids": ["21"],
+      "retrieved_ids": ["21", "18", "20"],
+      "refused": false,
+      "label": "faithful",
+      "label_reason": ""
+    },
+    {
+      "id": "H5",
+      "question": "Can I collect my order from a pickup point instead of having it delivered to my house?",
+      "answer": "You may be able to: where the carrier offers it, you can choose a nearby pickup point at checkout [24]. You'll get a notification when it's ready, and you might be asked to show ID along with your collection code [24].",
+      "cited_ids": ["24"],
+      "retrieved_ids": ["24", "19", "20"],
+      "refused": false,
+      "label": "unfaithful",
+      "label_reason": ""
+    },
+    {
+      "id": "H6",
+      "question": "The zip on my jacket broke after I caught it on a door handle. It's only 8 months old - is that covered?",
+      "answer": "Yes: products are covered against defects for up to **2 years** under EU law [37], so at 8 months your jacket is still within the warranty and we can arrange a repair or replacement [37].",
+      "cited_ids": ["37"],
+      "retrieved_ids": ["37", "35", "46"],
+      "refused": false,
+      "label": "unfaithful",
+      "label_reason": ""
+    },
+    {
+      "id": "H7",
+      "question": "I won't be home when my parcel arrives tomorrow. What happens?",
+      "answer": "Depending on the carrier, they'll either try again, leave a card, or divert your parcel to a nearby pickup point [20]. Your tracking link has the instructions to reschedule or collect it [20].",
+      "cited_ids": ["20"],
+      "retrieved_ids": ["20", "24", "18"],
+      "refused": false,
+      "label": "unfaithful",
+      "label_reason": ""
+    },
+    {
+      "id": "H8",
+      "question": "Do my loyalty points run out if I don't use them?",
+      "answer": "No: your loyalty points don't expire, so you can save them up and redeem them for discounts whenever you like [49]. Joining is free through your account [49].",
+      "cited_ids": ["49"],
+      "retrieved_ids": ["49", "34", "11"],
+      "refused": false,
+      "label": "faithful",
+      "label_reason": ""
+    }
+  ]
+}

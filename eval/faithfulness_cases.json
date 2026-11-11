@@ -1,0 +1,228 @@
+{
+  "description": "Labelled set for validating src/faithfulness.py (DL16 C1). Separate from the frozen eval/queries.json. 'faithful' = every claim is backed by its cited doc; 'unfaithful' = at least one claim carries a real citation the doc does not support. Labels corrected 2026-11-10: Q1-real, Q2-real, Q3-real flipped faithful -> unfaithful (real over-claims found by judge v1, see label_change). 'corrupted_text' marks the injected false claim, which must itself be flagged for a corrupted case to count as caught.",
+  "cases": [
+    {
+      "id": "Q1-real",
+      "source_query": "Q1",
+      "question": "How long do I have to return something?",
+      "answer": "For most items, you have **30 days from delivery** to return them for a refund [26]. The item must be unused, in original condition, with tags and original packaging [26]. You can start a return from **Your account → Returns** [26].\n\nSome items have different rules:\n- **Regular sale or discounted items:** returnable within **14 days** of delivery, refunded as **store credit only** [32].\n- **Clearance or items marked \"Final sale\":** **not returnable** [32].\n- **Personalised or hygiene-sealed items:** non-returnable unless faulty [26].\n\nSeparately, you have a **14-day statutory right to withdraw** from your order for any reason, which always applies [27]. Personalised goods and hygiene-sealed items are exceptions to this right [27].\n\nFaulty, damaged, or wrong items are covered by their own rules, even if they were on sale [32][26].\n\nWhat type of item are you returning? I can give you a more specific answer.",
+      "cited_ids": [
+        "26",
+        "32",
+        "27"
+      ],
+      "retrieved_ids": [
+        "26",
+        "27",
+        "32"
+      ],
+      "refused": false,
+      "label": "unfaithful",
+      "note": "Real answer from eval/generation_results.md (run 2026-10-29). Label = faithful per Stylianos's brief; human approval column not yet filled.",
+      "previous_id": "Q1-faithful",
+      "label_change": {
+        "date": "2026-11-10",
+        "from": "faithful",
+        "to": "unfaithful",
+        "claim": "Faulty, damaged, or wrong items are covered by their own rules, even if they were on sale [32][26].",
+        "cited_doc_text": "[32] \"Your statutory rights for faulty goods are unaffected by this — a faulty sale item is still covered.\" · [26] \"Faulty, damaged or wrong items — see \\\"Faulty, defective or wrong item\\\".\"",
+        "reason": "Scope widened: doc 32 keeps only FAULTY sale items covered; 'damaged or wrong … even if on sale' is not stated (doc 26 backs only the 'own rules' half).",
+        "basis": "Judge v1 flagged it; Stylianos confirmed it is a real over-claim."
+      }
+    },
+    {
+      "id": "Q2-real",
+      "source_query": "Q2",
+      "question": "The boots I ordered turned up with a ripped seam - can I get my money back?",
+      "answer": "Yes, you can likely get a full refund. Items that arrive faulty, damaged in transit, or not as ordered are covered: report the issue within 30 days for a free replacement or a full refund [35]. A ripped seam would generally count as faulty or damaged in transit.\n\nTo make the claim:\n- **Report it within 30 days** of delivery [35].\n- **Include your order number and a photo** of the issue [35]. Also photograph the packaging, and keep it until the issue is resolved [22].\n- **Return shipping is free.** Northbound sends a prepaid label [35].\n\nIf you're past 30 days, items are still covered for up to 2 years against manufacturing defects, though not damage from normal wear or misuse [35].\n\nEven if the boots were marked \"Final sale,\" your statutory rights for faulty goods still apply [33].",
+      "cited_ids": [
+        "35",
+        "22",
+        "33"
+      ],
+      "retrieved_ids": [
+        "35",
+        "22",
+        "33"
+      ],
+      "refused": false,
+      "label": "unfaithful",
+      "note": "Real answer from eval/generation_results.md (run 2026-10-29). Label = faithful per Stylianos's brief; human approval column not yet filled.",
+      "previous_id": "Q2-faithful",
+      "label_change": {
+        "date": "2026-11-10",
+        "from": "faithful",
+        "to": "unfaithful",
+        "claim": "Report it within 30 days of delivery [35].",
+        "cited_doc_text": "[35] \"Report it within 30 days for a free replacement or a full refund.\"",
+        "reason": "Condition added: doc 35 gives a 30-day window but never anchors it to delivery.",
+        "basis": "Judge v1 flagged it; Stylianos confirmed it is a real over-claim."
+      }
+    },
+    {
+      "id": "Q3-real",
+      "source_query": "Q3",
+      "question": "I'm sending back a sale item I bought about 3 weeks ago - do I get a refund or store credit, and who pays the return postage?",
+      "answer": "Sale items are refunded as **store credit only**, not to your original payment method [30]. Store credit is added to your account and does not expire [34].\n\nFor postage, return postage is **not refunded for change-of-mind returns** [30]. Your return is within the 30-day window if it was delivered recently enough, since returns are accepted within 30 days of delivery [26]. The items must be unused, in original condition, with tags and original packaging [26]. You can start the return from **Your account → Returns** [26].\n\nMy documents don't include the full \"Return shipping: who pays\" article or the \"Sale & clearance items: return exceptions\" article, so I can't confirm any other conditions that apply to sale items.",
+      "cited_ids": [
+        "30",
+        "34",
+        "26"
+      ],
+      "retrieved_ids": [
+        "30",
+        "34",
+        "26"
+      ],
+      "refused": false,
+      "label": "unfaithful",
+      "note": "Real answer from eval/generation_results.md (run 2026-10-29). Label = faithful per Stylianos's brief; human approval column not yet filled.",
+      "previous_id": "Q3-faithful",
+      "label_change": {
+        "date": "2026-11-10",
+        "from": "faithful",
+        "to": "unfaithful",
+        "claim": "Sale items are refunded as store credit only, not to your original payment method [30].",
+        "cited_doc_text": "[30] \"Sale items may be refunded as store credit only — see \\\"Sale & clearance items\\\".\"",
+        "reason": "Strengthened 'may' to 'are': the cited doc 30 does not state it flatly (doc 32 does, but was not cited).",
+        "basis": "Judge v1 flagged it; Stylianos confirmed it is a real over-claim."
+      }
+    },
+    {
+      "id": "Q4-real",
+      "source_query": "Q4",
+      "question": "Shipping to Germany - how long does it take, and do I get free delivery on a 45 euro order?",
+      "answer": "Delivery to Germany takes **2–3 business days** after dispatch, and orders are dispatched within 1 business day [16]. Estimates may be longer during sale periods and public holidays [16].\n\nYou won't get free delivery on a €45 order. Free standard shipping to the rest of the EU applies only on orders over €75 [17]. Your order would be charged the standard EU rate of €6.95 [17].",
+      "cited_ids": [
+        "16",
+        "17"
+      ],
+      "retrieved_ids": [
+        "16",
+        "15",
+        "17"
+      ],
+      "refused": false,
+      "label": "faithful",
+      "note": "Real answer from eval/generation_results.md (run 2026-10-29). Label = faithful per Stylianos's brief; human approval column not yet filled.",
+      "previous_id": "Q4-faithful"
+    },
+    {
+      "id": "Q5-real",
+      "source_query": "Q5",
+      "question": "Do you do pay-later, like Klarna?",
+      "answer": "Yes. Klarna pay-later is available, with two options: pay in 30 days, or pay in 3 interest-free instalments. Both are subject to Klarna's approval, and you can see Klarna's terms at checkout [07].",
+      "cited_ids": [
+        "07"
+      ],
+      "retrieved_ids": [
+        "07",
+        "30",
+        "34"
+      ],
+      "refused": false,
+      "label": "faithful",
+      "note": "Real answer from eval/generation_results.md (run 2026-10-29). Label = faithful per Stylianos's brief; human approval column not yet filled.",
+      "previous_id": "Q5-faithful"
+    },
+    {
+      "id": "Q6-real",
+      "source_query": "Q6",
+      "question": "Nothing's actually wrong with it, I just changed my mind - can I still send it back?",
+      "answer": "Yes, you can likely return it. Northbound's policy allows most items to be returned within **30 days of delivery** for a refund [26]. The item must be unused, in original condition, with tags and original packaging [26]. You can start a return from **Your account → Returns** [26].\n\nA few items are handled differently. Personalised or hygiene-sealed items can't be returned unless they're faulty [26]. Sale and clearance items have their own return exceptions [26], but I don't have those details here.\n\nI don't have information on who pays return postage for change-of-mind returns, or on how refunds are issued.",
+      "cited_ids": [
+        "26"
+      ],
+      "retrieved_ids": [
+        "35",
+        "26",
+        "22"
+      ],
+      "refused": false,
+      "label": "faithful",
+      "note": "Real answer from eval/generation_results.md (run 2026-10-29). Label = faithful per Stylianos's brief; human approval column not yet filled.",
+      "previous_id": "Q6-faithful"
+    },
+    {
+      "id": "Q1-corrupted",
+      "source_query": "Q1",
+      "question": "How long do I have to return something?",
+      "answer": "For most items, you have **60 days from delivery** to return them for a refund [26]. The item must be unused, in original condition, with tags and original packaging [26]. You can start a return from **Your account → Returns** [26].\n\nSome items have different rules:\n- **Regular sale or discounted items:** returnable within **14 days** of delivery, refunded as **store credit only** [32].\n- **Clearance or items marked \"Final sale\":** **not returnable** [32].\n- **Personalised or hygiene-sealed items:** non-returnable unless faulty [26].\n\nSeparately, you have a **14-day statutory right to withdraw** from your order for any reason, which always applies [27]. Personalised goods and hygiene-sealed items are exceptions to this right [27].\n\nFaulty, damaged, or wrong items are covered by their own rules, even if they were on sale [32][26].\n\nWhat type of item are you returning? I can give you a more specific answer.",
+      "cited_ids": [
+        "26",
+        "32",
+        "27"
+      ],
+      "retrieved_ids": [
+        "26",
+        "27",
+        "32"
+      ],
+      "refused": false,
+      "label": "unfaithful",
+      "note": "CORRUPTED on purpose: 30 days -> 60 days, still cited to [26] (doc 26 says 30).",
+      "previous_id": "Q1-corrupted",
+      "corrupted_text": "60 days from delivery"
+    },
+    {
+      "id": "Q2-corrupted",
+      "source_query": "Q2",
+      "question": "The boots I ordered turned up with a ripped seam - can I get my money back?",
+      "answer": "Yes, you can likely get a full refund. Items that arrive faulty, damaged in transit, or not as ordered are covered: report the issue within 30 days for a free replacement or a full refund [35]. A ripped seam would generally count as faulty or damaged in transit.\n\nTo make the claim:\n- **Report it within 30 days** of delivery [35].\n- **Include your order number and a photo** of the issue [35]. Also photograph the packaging, and keep it until the issue is resolved [22].\n- **You pay the return shipping yourself**, and Northbound refunds it after inspection [35].\n\nIf you're past 30 days, items are still covered for up to 2 years against manufacturing defects, though not damage from normal wear or misuse [35].\n\nEven if the boots were marked \"Final sale,\" your statutory rights for faulty goods still apply [33].",
+      "cited_ids": [
+        "35",
+        "22",
+        "33"
+      ],
+      "retrieved_ids": [
+        "35",
+        "22",
+        "33"
+      ],
+      "refused": false,
+      "label": "unfaithful",
+      "note": "CORRUPTED on purpose: 'Northbound pays return shipping' -> 'customer pays', still cited to [35].",
+      "previous_id": "Q2-corrupted",
+      "corrupted_text": "You pay the return shipping yourself"
+    },
+    {
+      "id": "Q4-corrupted",
+      "source_query": "Q4",
+      "question": "Shipping to Germany - how long does it take, and do I get free delivery on a 45 euro order?",
+      "answer": "Delivery to Germany takes **2–3 business days** after dispatch, and orders are dispatched within 1 business day [16]. Estimates may be longer during sale periods and public holidays [16].\n\nYes, a €45 order qualifies for free delivery. Free standard shipping to the rest of the EU applies on orders over €40 [17].",
+      "cited_ids": [
+        "16",
+        "17"
+      ],
+      "retrieved_ids": [
+        "16",
+        "15",
+        "17"
+      ],
+      "refused": false,
+      "label": "unfaithful",
+      "note": "CORRUPTED on purpose: free-shipping threshold €75 -> €40, still cited to [17].",
+      "previous_id": "Q4-corrupted",
+      "corrupted_text": "applies on orders over €40"
+    },
+    {
+      "id": "Q5-corrupted",
+      "source_query": "Q5",
+      "question": "Do you do pay-later, like Klarna?",
+      "answer": "Yes. Klarna pay-later is available, with two options: pay in 30 days, or pay in 6 interest-free instalments. Both are subject to Klarna's approval, and you can see Klarna's terms at checkout [07].",
+      "cited_ids": [
+        "07"
+      ],
+      "retrieved_ids": [
+        "07",
+        "30",
+        "34"
+      ],
+      "refused": false,
+      "label": "unfaithful",
+      "note": "CORRUPTED on purpose: 3 instalments -> 6, still cited to [07].",
+      "previous_id": "Q5-corrupted",
+      "corrupted_text": "pay in 6 interest-free instalments"
+    }
+  ]
+}

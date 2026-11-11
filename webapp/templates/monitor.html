@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Northbound Assistant — Answer quality</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="ops">
+
+<header class="topbar">
+  <div class="ops-wrap ops-bar">
+    <div class="logo">
+      <svg width="24" height="24" viewBox="0 0 28 28" fill="none" aria-hidden="true"><circle cx="14" cy="14" r="12.5" class="stroke-text" stroke-width="1.6"/><path d="M14 4.5 L17.2 14 L14 23.5 L10.8 14 Z" class="fill-accent"/></svg>
+      <span class="ops-logo">NORTHBOUND</span><span class="muted ops-sub">Assistant Ops</span>
+    </div>
+    <nav class="ops-nav" aria-label="Sections">
+      <a href="/monitor" aria-current="page">Answer quality</a>
+      <a href="/" class="tab">Customer chat</a>
+    </nav>
+    <span class="tag-dashed">Eval data · 10 frozen questions</span>
+  </div>
+</header>
+
+<main class="ops-wrap ops-main">
+{% if empty %}
+  <h1>Answer quality</h1>
+  <section class="panel">
+    <p>No monitor runs yet. Press the button to run the first one (or run <code>.venv/bin/python src/monitor.py</code>).</p>
+    <p style="margin-top:14px"><button type="button" class="run-btn" data-run>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"/></svg>Run monitor
+    </button></p>
+  </section>
+{% else %}
+  <div class="ops-head">
+    <div>
+      <h1>Answer quality</h1>
+      <p class="muted">Monitor run over the {{ s.answers }} frozen test questions · Knowledge base: {{ s.kb_docs }} policy documents · model <code>{{ s.model }}</code> · {{ s.judge_version }}</p>
+    </div>
+    <div class="run-box">
+      <p class="num muted small">Last run: <strong class="ink">Run {{ s.run }}</strong> · {{ run_time }}</p>
+      <button type="button" class="run-btn" data-run>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"/></svg>Run monitor
+    </button>
+      <p class="muted tiny">Asks the 10 questions again and judges every claim · about ${{ '%.2f' % (s.avg_cost_total_usd * s.answers) }} per run</p>
+    </div>
+  </div>
+
+  <div class="ops-top">
+    <section class="panel gs" aria-labelledby="gs-title">
+      <div class="row-between">
+        <h2 id="gs-title">Grounding score</h2>
+        {% if status == 'below' %}
+          <span class="pill pill-warn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9.5 17h-19L12 3z"/><path d="M12 10v4"/></svg>Below band</span>
+        {% else %}
+          <span class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg>{{ 'Within band' if status == 'within' else 'Above band' }}</span>
+        {% endif %}
+      </div>
+      <div class="gs-value">
+        <span class="num big">{{ '%.1f' % s.grounding_score }}%</span>
+        <span class="muted">of claims supported by a cited source</span>
+      </div>
+      <div class="num muted small">
+        {% if delta is not none %}<strong class="{{ 'good' if delta >= 0 else 'warn' }}">{{ '%+.1f' % delta }} pts</strong> vs run {{ prev_run }} · {% else %}First run, so there is no comparison yet · {% endif %}
+        {{ s.claims_supported }} of {{ s.claims_judged }} claims supported across {{ s.answerable }} answerable questions
+      </div>
+
+      <div class="gauge-wrap">
+        <div class="gauge" role="img" aria-label="Score {{ '%.1f' % s.grounding_score }}% on a scale from 85 to 100. Provisional target {{ t.target|int }}%, band {{ t.band_low|int }} to {{ t.band_high|int }}%.">
+          <div class="g-track"></div>
+          <div class="g-band" style="left: {{ gauge.band_left }}%; width: {{ gauge.band_width }}%"></div>
+          <div class="g-fill" style="width: {{ gauge.score }}%"></div>
+          <div class="g-dot {{ 'g-dot-warn' if status == 'below' }}" style="left: {{ gauge.score }}%"></div>
+          <div class="g-target" style="left: {{ gauge.target }}%"></div>
+        </div>
+        <div class="g-ticks num" aria-hidden="true">
+          {% for tk in gauge.ticks %}<span style="left: {{ tk.left }}%" class="{{ 'ink strong' if tk.v == t.target }}">{{ tk.v }}</span>{% endfor %}
+        </div>
+        <div class="legend">
+          <span><span class="lg-target"></span>Target {{ t.target|int }}%</span>
+          <span><span class="lg-band"></span>Band {{ t.band_low|int }}–{{ t.band_high|int }}%</span>
+          <span class="tag-dashed tag-sm">Provisional</span>
+        </div>
+        <p class="provisional">The target and band are placeholders pending teacher sign-off (DL16), not a validated threshold.</p>
+      </div>
+    </section>
+
+    <div class="tiles">
+      {% set cv_ok = s.citations_valid == s.citations_total %}
+      <section class="panel tile">
+        <div class="row-between"><h2 class="tile-h">Citations valid</h2>
+          {% if cv_ok %}<svg class="good" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Passing"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>
+          {% else %}<svg class="warn" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Needs attention"><path d="M12 3l9.5 17h-19L12 3z"/><path d="M12 10v4"/><path d="M12 17.5v.01"/></svg>{% endif %}
+        </div>
+        <div class="num mid">{{ (100 * s.citations_valid / s.citations_total)|round|int if s.citations_total else 100 }}%</div>
+        <p class="num muted small">{{ s.citations_valid }} of {{ s.citations_total }} citations point to a real KB document retrieved for that question. {{ s.answers_citation_ok }} of {{ s.answers }} answers pass the citation gate.</p>
+      </section>
+
+      {% set oos_ok = s.out_of_scope_ok == s.out_of_scope_total %}
+      <section class="panel tile">
+        <div class="row-between"><h2 class="tile-h">Out-of-scope handled correctly</h2>
+          {% if oos_ok %}<svg class="good" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Passing"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>
+          {% else %}<svg class="warn" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Needs attention"><path d="M12 3l9.5 17h-19L12 3z"/><path d="M12 10v4"/><path d="M12 17.5v.01"/></svg>{% endif %}
+        </div>
+        <div class="num mid">{{ (100 * s.out_of_scope_ok / s.out_of_scope_total)|round|int }}%</div>
+        <p class="num muted small">{{ s.out_of_scope_ok }} of {{ s.out_of_scope_total }} out-of-scope questions refused (price-match, laptops) or redirected to tracking (order status).</p>
+      </section>
+
+      <section class="panel tile">
+        <div class="row-between"><h2 class="tile-h">Avg cost per question</h2>
+          <svg class="muted" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .8-3 2s1.3 1.7 3 2 3 .8 3 2-1.3 2-3 2c-1.4 0-2.5-.5-3-1.5"/><path d="M12 6v2M12 16v2"/></svg>
+        </div>
+        <div class="num mid">${{ '%.4f' % s.avg_cost_total_usd }}</div>
+        <p class="num muted small">Answer ${{ '%.4f' % s.avg_cost_generation_usd }} plus the faithfulness check · ≈ ${{ '%.2f' % (s.avg_cost_total_usd * 1000) }} per 1,000 questions. Retrieval runs locally.</p>
+      </section>
+    </div>
+  </div>
+
+  <section class="panel" aria-labelledby="trend-title">
+    <div class="row-between wrap-gap">
+      <div>
+        <h2 id="trend-title" class="h16">Grounding score by run</h2>
+        <p class="muted small">{{ n_runs }} real run{{ 's' if n_runs != 1 }} so far: the line grows by one point per run (the Run monitor button or <code>src/monitor.py</code>). KB size changes are marked on the chart.</p>
+      </div>
+      <div class="legend">
+        <span><span class="lg-line"></span>Grounding score</span>
+        <span><span class="lg-dash"></span>Target {{ t.target|int }}% (provisional)</span>
+        <span><span class="lg-band lg-band-flat"></span>Band {{ t.band_low|int }}–{{ t.band_high|int }}%</span>
+        <span><span class="lg-dot"></span>Below band</span>
+      </div>
+    </div>
+    <svg class="chart" viewBox="0 0 720 262" width="100%" role="img" aria-label="Grounding score over {{ n_runs }} run{{ 's' if n_runs != 1 }}: {% for p in chart.points %}run {{ p.run }} {{ p.score }}%{{ ', ' if not loop.last }}{% endfor %}.">
+      <rect x="48" y="{{ chart.band_y }}" width="660" height="{{ chart.band_h }}" class="c-band"/>
+      {% for gl in chart.grid %}
+        <line x1="48" y1="{{ gl.y }}" x2="708" y2="{{ gl.y }}" class="{{ 'c-axis' if loop.last else 'c-grid' }}"/>
+        <text x="40" y="{{ gl.y + 4 }}" text-anchor="end" class="c-label">{{ gl.label }}</text>
+      {% endfor %}
+      <line x1="48" y1="{{ chart.target_y }}" x2="708" y2="{{ chart.target_y }}" class="c-target"/>
+      {% for nt in chart.notes %}
+        <line x1="{{ nt.x }}" y1="28" x2="{{ nt.x }}" y2="220" class="c-note"/>
+        <text x="{{ nt.tx }}" y="38" text-anchor="{{ nt.anchor }}" class="c-note-text">{{ nt.text }}</text>
+      {% endfor %}
+      {% if chart.points|length > 1 %}<polyline points="{{ chart.polyline }}" class="c-line"/>{% endif %}
+      {% for p in chart.points %}
+        <circle cx="{{ p.x }}" cy="{{ p.y }}" r="{{ 6 if p.below else 4 }}" class="{{ 'c-pt-warn' if p.below else 'c-pt' }}"/>
+        {% if loop.last or p.below %}<text x="{{ p.x }}" y="{{ p.y - 12 }}" text-anchor="middle" class="{{ 'c-val-warn' if p.below else 'c-val' }}">{{ '%.1f' % p.score }}%</text>{% endif %}
+      {% endfor %}
+      {% for xl in chart.xlabels %}<text x="{{ xl.x }}" y="242" text-anchor="middle" class="c-label">{{ xl.run }}</text>{% endfor %}
+      <text x="378" y="259" text-anchor="middle" class="c-label">Monitor run</text>
+    </svg>
+  </section>
+
+  <section class="panel table-panel" id="recent" aria-labelledby="recent-title">
+    <div class="row-between wrap-gap table-head">
+      <div>
+        <h2 id="recent-title" class="h16">Answers in this run</h2>
+        <p class="muted small">Each answer is checked twice: do the citations exist (citation gate), and is every claim backed by them (faithfulness judge)?</p>
+      </div>
+      <div class="seg" role="group" aria-label="Filter answers">
+        <button type="button" data-filter="all" aria-pressed="true">All ({{ rows|length }})</button>
+        <button type="button" data-filter="flagged" aria-pressed="false">Flagged ({{ n_flagged }})</button>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table class="ops-table">
+        <thead><tr>
+          <th scope="col" class="w-id">Query</th>
+          <th scope="col">Question</th>
+          <th scope="col" class="w-src">Sources cited</th>
+          <th scope="col" class="w-cit">Citation check</th>
+          <th scope="col" class="w-faith">Faithfulness</th>
+        </tr></thead>
+        <tbody>
+        {% for r in rows %}
+          <tr class="{{ 'flagged' if r.flagged }}" data-flagged="{{ 'true' if r.flagged else 'false' }}">
+            <td class="num muted">{{ r.id }}</td>
+            <td>
+              <div class="q-cell">
+                {% if r.flagged %}<svg class="warn flag" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Flagged"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg>{% endif %}
+                <div>{{ r.question }}
+                  {% if r.faithfulness_note %}<div class="note {{ 'warn' if r.flagged else 'muted' }}">{{ r.faithfulness_note }}</div>{% endif %}
+                </div>
+              </div>
+            </td>
+            <td class="muted">
+              {% if r.refused %}None (refused){% elif r.sources %}{{ r.sources|map(attribute='title')|join('; ') }}{% else %}None{% endif %}
+            </td>
+            <td>
+              {% if r.citation_ok %}<span class="check good"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg>Pass</span>
+              {% else %}<span class="check warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>Fail</span>
+                <div class="note warn">{{ r.citation_problems|join('; ') }}</div>{% endif %}
+            </td>
+            <td>
+              {% if r.faithfulness == 'Supported' %}<span class="badge badge-good">Supported</span>
+              {% elif r.faithfulness == 'Correct refusal' %}<span class="badge badge-neutral">Correct refusal</span>
+              {% elif r.faithfulness == 'No claims' %}<span class="badge badge-neutral">Clarifying question</span>
+              {% else %}<span class="badge badge-warn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9.5 17h-19L12 3z"/><path d="M12 10v4"/></svg>{{ r.faithfulness }}</span>{% endif %}
+              {% if r.claims_judged %}<div class="note muted num">{{ r.claims_supported }}/{{ r.claims_judged }} claims supported</div>{% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endif %}
+</main>
+
+
+<div class="run-overlay" id="run-overlay" hidden>
+  <div class="run-card" role="dialog" aria-modal="true" aria-labelledby="run-title" aria-describedby="run-label">
+    <div class="ring" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-labelledby="run-title">
+      <svg viewBox="0 0 160 160" aria-hidden="true">
+        <circle cx="80" cy="80" r="68" class="ring-track"/>
+        <circle cx="80" cy="80" r="68" class="ring-fill" id="ring-fill"/>
+      </svg>
+      <div class="ring-center">
+        <span class="ring-pct num" id="ring-pct">0%</span>
+        <span class="ring-sub muted" id="ring-sub">starting</span>
+      </div>
+    </div>
+    <h2 id="run-title">Running the monitor</h2>
+    <p class="run-label" id="run-label" aria-live="polite">Starting…</p>
+    <ol class="run-steps" id="run-steps" aria-hidden="true"></ol>
+    <p class="muted tiny num" id="run-time">0:00 elapsed</p>
+    <div class="run-actions" id="run-actions" hidden><button type="button" class="run-btn" id="run-close">Close</button></div>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  const onlyFlagged = b.dataset.filter === 'flagged';
+  document.querySelectorAll('.ops-table tbody tr').forEach(tr => {
+    tr.hidden = onlyFlagged && tr.dataset.flagged !== 'true';
+  });
+}));
+</script>
+<script src="{{ url_for('static', filename='monitor-run.js') }}"></script>
+</body>
+</html>

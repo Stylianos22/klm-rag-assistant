@@ -9,26 +9,36 @@ A retrieval-augmented generation (RAG) customer-service assistant for **Northbou
 | Stage | State |
 |---|---|
 | Knowledge base (51 docs) + 10 frozen test queries | ✅ done |
-| Ingest → embed → Chroma index → top-3 retrieval + abstain | ✅ built and measured |
-| Retrieval eval on the full KB | ❌ **4/6 = 67%** (target >80%); Q9 not refused — see [results](docs/eval-results.md) |
-| Fix (reranker / LLM grounding check) | ⏳ being decided — [DL13](docs/decision-logs/DL13-full-kb-broke-abstain-threshold.md) |
-| Answer generation + citation verification (`generate.py`, `verify.py`) | ⏳ stubs, not built yet |
+| Ingest → embed → Chroma index → top-3 retrieval | ✅ built and measured (full-KB retrieval 4/6 = 67%; see [results](docs/eval-results.md)) |
+| Abstention | ✅ moved from a similarity threshold into generation (the model refuses when the docs don't answer) |
+| Answer generation with citations + citation gate (`generate.py`, `verify.py`) | ✅ built: citations valid 10/10, edge cases 4/4 ([eval/generation_results.md](eval/generation_results.md)) |
+| Local web chat + `/monitor` answer-quality dashboard (`webapp/`) | ✅ built |
+| Faithfulness check (LLM-as-judge, `faithfulness.py`) + grounding monitor (`monitor.py`) | 🟡 built; judge v2 scores 100% in-sample but **4/8 = 50% on a held-out set** ([results](eval/faithfulness_holdout_results.md)) — not yet a trustworthy gate |
 
-The current result is a measured failure, documented with its cause, not hidden: a spike on 9 docs scored 100%, but only on hand-written summaries; on the real 51-doc KB, retrieval drops to 67% and no single similarity threshold separates answerable from unanswerable questions.
+The project reports its failures as measured, not hidden: retrieval on the real 51-doc KB fell short of target, and the faithfulness judge that looked perfect on its tuning cases agreed with hand labels only half the time on unseen ones.
 
-## Run the eval
+## Run it
 
 Requires Python 3.10–3.12 (3.14 is too new for the torch/chromadb wheels).
 
 ```bash
 python3.11 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-python src/run_eval.py --reindex          # build the index from kb/ and score the 10 frozen queries
-python src/run_eval.py --sweep            # threshold margins: lowest answerable vs highest out-of-KB score
-python src/retrieve.py "Do you do pay-later, like Klarna?"   # try a single question
+python src/run_eval.py --reindex          # build the index from kb/ and score retrieval on the 10 frozen queries
+python src/retrieve.py "Do you do pay-later, like Klarna?"   # retrieval only, no API key needed
 ```
 
-The first run downloads the `all-MiniLM-L6-v2` embedding model (~90 MB). Everything runs locally and free; no API key is needed for retrieval.
+Generation, the faithfulness judge and the monitor call the Claude API. Put your key in a `.env` file in the repo root (gitignored, never committed):
+
+```bash
+echo "ANTHROPIC_API_KEY=your-key-here" > .env
+python src/chat.py                        # terminal chat
+python src/run_generation_eval.py         # answers + citation gate on the 10 frozen queries
+python src/monitor.py                     # one monitor run (about $0.01): grounding score over the 10 queries
+PORT=5001 python webapp/app.py            # web chat at /  and the dashboard at /monitor (with a Run monitor button)
+```
+
+The first run downloads the `all-MiniLM-L6-v2` embedding model (~90 MB); retrieval runs locally.
 
 ## Learning outcomes → evidence
 
@@ -38,14 +48,16 @@ The first run downloads the `all-MiniLM-L6-v2` embedding model (~90 MB). Everyth
 | [KB structure](docs/kb-structure.md) + [kb/](kb/) | LO1 | Analysing: the KB is real, structured and internally consistent |
 | [Kickoff stack trade-off tables](docs/project-kickoff-and-decision-log.md) + [DL07](docs/decision-logs/DL07-provisional-rag-stack.md) | LO3 | Designing: a justified RAG stack |
 | [Test queries (frozen)](eval/test-queries-frozen.md) + [DL11](docs/decision-logs/DL11-evaluation-method.md) | LO3 | Designing: measurable, un-gameable evaluation |
-| [src/](src/) + `run_eval.py` + [results](docs/eval-results.md) + [DL13](docs/decision-logs/DL13-full-kb-broke-abstain-threshold.md) | LO4 | Realising: a running pipeline, a measured failure and its diagnosis (fix in progress) |
+| [src/](src/) + `run_eval.py` + [results](docs/eval-results.md) + [DL13](docs/decision-logs/DL13-full-kb-broke-abstain-threshold.md) | LO4 | Realising: a running pipeline, a measured failure and its diagnosis |
+| `faithfulness.py`, `monitor.py`, [webapp/](webapp/) `/monitor`, [held-out validation](eval/faithfulness_holdout_results.md) | LO5 | Managing: answer quality monitored over runs, with the judge itself validated on unseen cases |
 
 ## Repository layout
 
 ```
-src/        pipeline: ingest.py, index.py, retrieve.py, run_eval.py (generate.py, verify.py = stubs)
+src/        pipeline: ingest, index, retrieve, generate, verify, faithfulness judge, monitor, evals, chat
+webapp/     Flask web chat + /monitor answer-quality dashboard
 kb/         51 Northbound policy documents; doc id = leading number in the filename
-eval/       queries.json (10 frozen queries + gold docs + scoring) and the frozen query write-up
+eval/       queries.json (10 frozen queries, never edited), generation + faithfulness results, monitor run history
 spike/      spike.py: the early 9-doc retrieval probe
 docs/       decision logs, KB notes, kickoff log, spike note, eval results; screenshots in docs/images/
 ```
